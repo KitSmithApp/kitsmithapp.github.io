@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.kitsmith",
+      "sha256_cert_fingerprints": [
+        "CF:AE:E6:36:76:DC:71:C1:CA:E9:18:E7:12:02:CE:F4:B5:51:44:D8:BA:DD:01:35:27:87:EB:B0:3C:DD:FE:62"
+      ]
+    }
+  }
+]

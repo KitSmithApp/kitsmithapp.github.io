@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build KitSmith</title>
+<meta property="og:title" content="Build condivisa da KitSmith">
+<meta property="og:description" content="Aprila in KitSmith: build per Pro Clubs con punti AP sempre giusti.">
+<meta property="og:site_name" content="KitSmith">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Barlow:wght@400;600&display=swap">
+<style>
+  :root{color-scheme:dark}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;
+    background:radial-gradient(700px 500px at 50% 20%,rgba(124,92,255,.22),transparent 60%),#07060C;color:#F4F2FF;font:16px/1.5 Barlow,system-ui,sans-serif}
+  main{width:100%;max-width:420px;text-align:center}
+  .mark{display:inline-flex;align-items:center;gap:12px;font:700 34px 'Chakra Petch',sans-serif}
+  .spark{width:16px;height:32px;border-radius:4px;background:linear-gradient(180deg,#2FE6C9,#7C5CFF);box-shadow:0 0 22px rgba(124,92,255,.7);transform:skewX(-12deg)}
+  .card{margin:26px 0 20px;padding:18px;border:1px solid #26233A;border-radius:16px;background:#141222;text-align:left;min-height:96px}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8A8699;margin:0 0 6px}
+  .title{font:700 20px 'Chakra Petch',sans-serif;margin:0 0 6px}
+  .meta{color:#A09CB8;font-size:14px;margin:0}
+  .btn{display:block;width:100%;padding:15px;border-radius:14px;font:600 17px Barlow,sans-serif;text-decoration:none;margin-top:10px}
+  .primary{background:linear-gradient(135deg,#7C5CFF,#5B3FE0);color:#fff}
+  .ghost{border:1px solid #2F2B45;color:#D9D5EA}
+  .small{color:#8A8699;font-size:13px;margin-top:18px}
+  .small a{color:#9E8BFF}
+</style>
+</head>
+<body>
+<main>
+  <div class="mark"><span class="spark"></span>KitSmith</div>
+  <div class="card" id="card">
+    <p class="eyebrow" id="lab">Build condivisa</p>
+    <p class="title" id="title">Caricamento…</p>
+    <p class="meta" id="meta"></p>
+  </div>
+  <a class="btn primary" id="open" href="#">Apri in KitSmith</a>
+  <a class="btn ghost" id="store" href="https://play.google.com/store/apps/details?id=app.kitsmith">Scarica KitSmith da Google Play</a>
+  <p class="small">KitSmith: build per Pro Clubs · <a href="/privacy/">Privacy</a><br>Non affiliata a Electronic Arts.</p>
+</main>
+<script>
+  // id della build dal link (?id=...). Il pulsante apre l'app; se non c'è, Android porta al Play Store.
+  const id = (new URLSearchParams(location.search).get("id") || "").replace(/[^\w-]/g, "").slice(0, 60);
+  const store = "https://play.google.com/store/apps/details?id=app.kitsmith";
+  const en = !/^it\b/i.test(navigator.language || "");
+  if (en) {
+    document.documentElement.lang = "en";
+    document.getElementById("lab").textContent = "Shared build";
+    document.getElementById("open").textContent = "Open in KitSmith";
+    document.getElementById("store").textContent = "Get KitSmith on Google Play";
+  }
+  const android = /android/i.test(navigator.userAgent);
+  document.getElementById("open").href = !id ? store
+    : android ? "intent://build/" + id + "#Intent;scheme=app.kitsmith;package=app.kitsmith;S.browser_fallback_url=" + encodeURIComponent(store) + ";end"
+    : "app.kitsmith://build/" + id;
+
+  // anteprima: titolo, archetipo e autore letti dal database (solo build pubbliche; chiave pubblica di KitSmith)
+  const SB = "https://bjtwygflubuhozholfss.supabase.co", KEY = "sb_publishable_KCmSt4pQU38xW2uCcSOwAw_SfRJAUys";
+  const h = { apikey: KEY, Authorization: "Bearer " + KEY };
+  const set = (t, m) => { document.getElementById("title").textContent = t; document.getElementById("meta").textContent = m || ""; };
+  if (!id) set(en ? "Build not found" : "Build non trovata");
+  else fetch(SB + "/rest/v1/builds?select=title,cls,author_id,data&priv=eq.false&id=eq." + encodeURIComponent(id), { headers: h })
+    .then(r => r.json()).then(async rows => {
+      const b = rows && rows[0];
+      if (!b) { set(en ? "Build not available" : "Build non disponibile", en ? "It may be private or deleted." : "Potrebbe essere privata o eliminata."); return; }
+      let who = "";
+      try { const p = await (await fetch(SB + "/rest/v1/profiles?select=name&id=eq." + b.author_id, { headers: h })).json(); who = p && p[0] ? p[0].name : ""; } catch (e) {}
+      const fc = b.data && b.data.fc;
+      const bits = [b.cls, fc && fc.h ? fc.h + " cm" : "", fc && fc.lvl ? (en ? "Lvl " : "Liv ") + fc.lvl : "", who ? (en ? "by " : "di ") + who : ""].filter(Boolean);
+      set(b.title, bits.join(" · "));
+      document.title = b.title + " · KitSmith";
+    }).catch(() => set(en ? "Shared build" : "Build condivisa", en ? "Open it in the app." : "Aprila nell'app."));
+</script>
+</body>
+</html>
